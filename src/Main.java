@@ -4,10 +4,11 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
@@ -42,14 +43,21 @@ public class Main extends Application {
 
     BorderPane root = new BorderPane();
 
-    // Rectangle creation and properties
+    // Line properties
+    CustomLine line;
+    SimpleDoubleProperty lineInitX = new SimpleDoubleProperty();
+    SimpleDoubleProperty lineInitY = new SimpleDoubleProperty();
+    SimpleDoubleProperty lineX = new SimpleDoubleProperty();
+    SimpleDoubleProperty lineY = new SimpleDoubleProperty();
+
+    // Rectangle properties
     CustomRectangle rectangle;
     SimpleDoubleProperty rectangleInitX = new SimpleDoubleProperty();
     SimpleDoubleProperty rectangleInitY = new SimpleDoubleProperty();
     SimpleDoubleProperty rectangleX = new SimpleDoubleProperty();
     SimpleDoubleProperty rectangleY = new SimpleDoubleProperty();
 
-    // Circle creation and properties
+    // Circle properties
     CustomEllipse ellipse;
     SimpleDoubleProperty ellipseInitX = new SimpleDoubleProperty();
     SimpleDoubleProperty ellipseInitY = new SimpleDoubleProperty();
@@ -62,7 +70,36 @@ public class Main extends Application {
         //Decides what to do on click for ex.: draw, select, resize etc..
         switch (chosenOperation) {
             case "drawShape" : switch (chosenShape) { //Decides which shape to draw.
+                                    case "line":
+                                        //Line bindings
+                                        line.endXProperty().bind(lineX);
+                                        line.endYProperty().bind(lineY);
+
+                                        if(event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+                                            line.setStartX(event.getX());
+                                            line.setStartY(event.getY());
+                                            lineInitX.set(event.getX());
+                                            lineInitY.set(event.getY());
+                                        } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+                                            lineX.set(event.getX());
+                                            lineY.set(event.getY());
+                                        } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
+                                            // Clone the line
+                                            CustomLine l = getNewLine();
+                                            l.setStartX(lineInitX.doubleValue());
+                                            l.setStartY(lineInitY.doubleValue());
+                                            l.setEndX(line.getEndX());
+                                            l.setEndY(line.getEndY());
+                                            drawingPane.getChildren().add(l);
+                                            // Hide the line
+                                            lineX.set(0);
+                                            lineY.set(0);
+                                            line.setStartX(0);
+                                            line.setStartY(0);
+                                        }
+                                        break;
                                     case "ellipse":
+                                        //Ellipse bindings
                                         ellipse.radiusXProperty().bind(ellipseX.subtract(ellipseInitX));
                                         ellipse.radiusYProperty().bind(ellipseY.subtract(ellipseInitY));
 
@@ -77,20 +114,20 @@ public class Main extends Application {
                                             ellipseX.set(event.getX());
                                             ellipseY.set(event.getY());
                                         } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
-                                            // Clone the rectangle
-                                            CustomEllipse r = new CustomEllipse();
+                                            // Clone the ellipse
+                                            CustomEllipse r = getNewEllipse();
                                             r.setCenterX(ellipse.getCenterX());
                                             r.setCenterY(ellipse.getCenterY());
                                             r.setRadiusY(ellipse.getRadiusY());
                                             r.setRadiusX(ellipse.getRadiusX());
                                             drawingPane.getChildren().add(r);
-                                            // Hide the rectangle
+                                            // Hide the ellipse
                                             ellipseX.set(0);
                                             ellipseY.set(0);
                                         }
                                         break;
                                     case "rectangle":
-                                        // Rectangle bindings...
+                                        // Rectangle bindings
                                         rectangle.widthProperty().bind(rectangleX.subtract(rectangleInitX));
                                         rectangle.heightProperty().bind(rectangleY.subtract(rectangleInitY));
 
@@ -104,7 +141,7 @@ public class Main extends Application {
                                             rectangleY.set(event.getY());
                                         } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
                                             // Clone the rectangle
-                                            CustomRectangle r = getNewCustomRectangle();
+                                            CustomRectangle r = getNewRectangle();
                                             r.setX(rectangle.getX());
                                             r.setY(rectangle.getY());
                                             r.setWidth(rectangle.getWidth());
@@ -114,11 +151,6 @@ public class Main extends Application {
                                             rectangleX.set(0);
                                             rectangleY.set(0);
                                         }
-                                        break;
-                                    case "line":
-                                        CustomLine line = new CustomLine(event.getX(), event.getY(), event.getX(), event.getY());
-                                        shapes.add(line);
-                                        drawingPane.getChildren().add(line);
                                         break;
                                     default:
                                         break;
@@ -139,8 +171,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        rectangle = getNewCustomRectangle();
-        ellipse = getEllipse();
+        line = getNewLine();
+        rectangle = getNewRectangle();
+        ellipse = getNewEllipse();
 
         //Setting the handler for mouse clicks.
         drawingPane.setOnMouseClicked(mouseEvent);
@@ -148,11 +181,12 @@ public class Main extends Application {
         drawingPane.setOnMouseReleased(mouseEvent);
         drawingPane.setOnMouseDragged(mouseEvent);
 
+        drawingPane.getChildren().add(line);
         drawingPane.getChildren().add(ellipse);
         drawingPane.getChildren().add(rectangle);
 
         root.setCenter(drawingPane);
-        root.setTop(addHBox());
+        root.setLeft(addVBox());
 
         primaryStage.setResizable( false );
 
@@ -163,57 +197,66 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private CustomRectangle getNewCustomRectangle() {
+    private CustomRectangle getNewRectangle() {
         CustomRectangle r = new CustomRectangle();
         r.setFill(Color.web(chosenColor));
         r.setStroke(Color.web(chosenBorderColor));
         return r;
     }
 
-    private CustomEllipse getEllipse() {
+    private CustomEllipse getNewEllipse() {
         CustomEllipse e = new CustomEllipse();
         e.setFill(Color.web(chosenColor));
         e.setStroke(Color.web(chosenBorderColor));
         return e;
     }
 
-    public HBox addHBox() {
-        HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);
-        hbox.setStyle("-fx-background-color: #9acd32;");
+    private CustomLine getNewLine() {
+        CustomLine l = new CustomLine();
+        l.setFill(Color.web(chosenColor));
+        l.setStroke(Color.web(chosenBorderColor));
+        return l;
+    }
 
-        Button lineBtn = new Button("Line");
+    public VBox addVBox() {
+        VBox vbox = new VBox();
+        vbox.setPadding(new Insets(15, 12, 15, 12));
+        vbox.setSpacing(10);
+        vbox.setStyle("-fx-background-color: #b4bec6; -fx-stroke-type: centered;");
+
+        Button lineBtn = new Button();
+        lineBtn.setGraphic(new ImageView("images/Line.png"));
         lineBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "line";
             this.chosenColor = "#FF0066";
         });
-        lineBtn.setPrefSize(100, 20);
 
-        Button circleBtn = new Button("Ellipse");
+        Button circleBtn = new Button();
+        circleBtn.setGraphic(new ImageView("images/Ellipse.png"));
         circleBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "ellipse";
             this.chosenColor = "#FF0066";
         });
-        circleBtn.setPrefSize(100, 20);
 
-        Button rectangleBtn = new Button("CustomRectangle");
+        Button rectangleBtn = new Button();
+        rectangleBtn.setGraphic(new ImageView("images/Rectangle.png"));
         rectangleBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "rectangle";
             this.chosenColor = "#09AC7C";
         });
-        rectangleBtn.setPrefSize(100, 20);
 
-        Button selectionBtn = new Button("Selection");
+        Button selectionBtn = new Button();
+        selectionBtn.setGraphic(new ImageView("images/Hand.png"));
         selectionBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "select";
         });
-        hbox.getChildren().addAll(lineBtn, circleBtn, rectangleBtn, selectionBtn);
 
-        return hbox;
+        vbox.getChildren().addAll(lineBtn, circleBtn, rectangleBtn, selectionBtn);
+
+        return vbox;
     }
 
 }
