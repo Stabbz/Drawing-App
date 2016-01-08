@@ -4,11 +4,11 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
@@ -33,11 +33,13 @@ public class Main extends Application {
 
     private String chosenShape = "rectangle";
 
-    private String chosenColor = "#FFFFFF";
-
     private String chosenBorderColor = "#000000";
 
     private double chosenSize = 60.00;
+
+    final ColorPicker mainColorPicker = new ColorPicker(Color.WHITE);
+
+    final ColorPicker borderColorPicker = new ColorPicker(Color.BLACK);
 
     Pane drawingPane = new Pane();
 
@@ -78,6 +80,7 @@ public class Main extends Application {
                                         if(event.getEventType() == MouseEvent.MOUSE_PRESSED) {
                                             line.setStartX(event.getX());
                                             line.setStartY(event.getY());
+                                            line.setStroke(mainColorPicker.getValue());
                                             lineInitX.set(event.getX());
                                             lineInitY.set(event.getY());
                                         } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
@@ -106,7 +109,8 @@ public class Main extends Application {
                                         if(event.getEventType() == MouseEvent.MOUSE_PRESSED) {
                                             ellipse.setCenterX(event.getX());
                                             ellipse.setCenterY(event.getY());
-
+                                            ellipse.setFill(mainColorPicker.getValue());
+                                            ellipse.setStroke(borderColorPicker.getValue());
                                             ellipseInitX.set(event.getX());
                                             ellipseInitY.set(event.getY());
 
@@ -134,6 +138,8 @@ public class Main extends Application {
                                         if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
                                             rectangle.setX(event.getX());
                                             rectangle.setY(event.getY());
+                                            rectangle.setFill(mainColorPicker.getValue());
+                                            rectangle.setStroke(borderColorPicker.getValue());
                                             rectangleInitX.set(event.getX());
                                             rectangleInitY.set(event.getY());
                                         } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
@@ -146,6 +152,7 @@ public class Main extends Application {
                                             r.setY(rectangle.getY());
                                             r.setWidth(rectangle.getWidth());
                                             r.setHeight(rectangle.getHeight());
+
                                             drawingPane.getChildren().add(r);
                                             // Hide the rectangle
                                             rectangleX.set(0);
@@ -199,22 +206,23 @@ public class Main extends Application {
 
     private CustomRectangle getNewRectangle() {
         CustomRectangle r = new CustomRectangle();
-        r.setFill(Color.web(chosenColor));
-        r.setStroke(Color.web(chosenBorderColor));
+        r.setFill(mainColorPicker.getValue());
+        r.setStroke(borderColorPicker.getValue());
+        r.setStrokeWidth(2);
         return r;
     }
 
     private CustomEllipse getNewEllipse() {
         CustomEllipse e = new CustomEllipse();
-        e.setFill(Color.web(chosenColor));
-        e.setStroke(Color.web(chosenBorderColor));
+        e.setFill(mainColorPicker.getValue());
+        e.setStroke(borderColorPicker.getValue());
+        e.setStrokeWidth(2);
         return e;
     }
 
     private CustomLine getNewLine() {
         CustomLine l = new CustomLine();
-        l.setFill(Color.web(chosenColor));
-        l.setStroke(Color.web(chosenBorderColor));
+        l.setStroke(mainColorPicker.getValue());
         return l;
     }
 
@@ -229,7 +237,6 @@ public class Main extends Application {
         lineBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "line";
-            this.chosenColor = "#FF0066";
         });
 
         Button circleBtn = new Button();
@@ -237,7 +244,6 @@ public class Main extends Application {
         circleBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "ellipse";
-            this.chosenColor = "#FF0066";
         });
 
         Button rectangleBtn = new Button();
@@ -245,16 +251,29 @@ public class Main extends Application {
         rectangleBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "drawShape";
             this.chosenShape = "rectangle";
-            this.chosenColor = "#09AC7C";
         });
 
         Button selectionBtn = new Button();
+//        selectionBtn.setStyle("-fx-base: #36454f;");
         selectionBtn.setGraphic(new ImageView("images/Hand.png"));
         selectionBtn.setOnMouseClicked(event -> {
             this.chosenOperation = "select";
         });
 
-        vbox.getChildren().addAll(lineBtn, circleBtn, rectangleBtn, selectionBtn);
+        TilePane shapesPane = new TilePane();
+        shapesPane.setPadding(new Insets(5, 0, 5, 0));
+        shapesPane.setVgap(4);
+        shapesPane.setHgap(4);
+        shapesPane.setPrefColumns(2);
+        shapesPane.setStyle("-fx-background-color: #bbc4cb;");
+        shapesPane.getChildren().addAll(lineBtn, circleBtn);
+        shapesPane.getChildren().addAll(rectangleBtn, selectionBtn);
+
+        // Labels
+        Label mainColorLabel = new Label("Main color");
+        Label borderColorLabel = new Label("Border color");
+
+        vbox.getChildren().addAll(shapesPane, mainColorLabel, mainColorPicker, borderColorLabel, borderColorPicker);
 
         return vbox;
     }

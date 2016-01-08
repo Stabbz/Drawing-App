@@ -30,13 +30,16 @@ public class CustomRectangle extends Rectangle {
             dragDelta.x = this.getLayoutX() - event.getSceneX();
             dragDelta.y = this.getLayoutY() - event.getSceneY();
             this.setCursor(Cursor.MOVE);
+            event.consume();
         });
         this.setOnMouseReleased(event -> {
             this.setCursor(Cursor.HAND);
+            event.consume();
         });
         this.setOnMouseDragged(event -> {
             this.setLayoutX(event.getSceneX() + dragDelta.x);
             this.setLayoutY(event.getSceneY() + dragDelta.y);
+            event.consume();
         });
         this.setOnMouseEntered(event -> {
             this.setCursor(Cursor.HAND);
@@ -47,7 +50,6 @@ public class CustomRectangle extends Rectangle {
         super(x, y, width, height);
 
         this.setFill(fill);
-        this.setStrokeWidth(3);
         this.setStroke(Color.BLACK);
 
         this.setOnScroll(event ->  {

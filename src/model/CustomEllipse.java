@@ -15,7 +15,7 @@ public class CustomEllipse extends Ellipse {
     final Delta dragDelta = new Delta();
 
     public CustomEllipse() {
-        this.setStrokeWidth(3);
+        this.setStrokeWidth(2);
         this.setStroke(Color.BLACK);
 
         this.setOnScroll(event ->  {
@@ -33,13 +33,16 @@ public class CustomEllipse extends Ellipse {
             dragDelta.x = this.getLayoutX() - event.getSceneX();
             dragDelta.y = this.getLayoutY() - event.getSceneY();
             this.setCursor(Cursor.MOVE);
+            event.consume();
         });
         this.setOnMouseReleased(event -> {
             this.setCursor(Cursor.HAND);
+            event.consume();
         });
         this.setOnMouseDragged(event -> {
             this.setLayoutX(event.getSceneX() + dragDelta.x);
             this.setLayoutY(event.getSceneY() + dragDelta.y);
+            event.consume();
         });
         this.setOnMouseEntered(event -> {
             this.setCursor(Cursor.HAND);
